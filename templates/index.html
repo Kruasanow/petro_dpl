@@ -1,1 +1,29 @@
-fire
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Парсинг ВК</title>
+</head>
+<body>
+    <form action="" method=post enctype=multipart/form-data>
+        <p> 
+          <label for="file-input">Выбрать файл</label>
+          <input id="file-input" type="file" name="file">
+          <input type=submit value=Загрузить>
+        </p>
+          </form>
+          <h4>{{data}}</h4>
+          <table>
+            <tbody>
+              {% for row in res %}
+              <tr>
+                {% for item in row %}
+                    <td>{{ item }}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+</body>
+</html>
