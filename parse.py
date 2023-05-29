@@ -4,6 +4,7 @@ from tokens import token_buff
 
 token = token_buff
 version = 5.131
+count = 30
 
 def get_count_posts(domainP):
     response = requests.get('https://api.vk.com/method/wall.get',
@@ -11,7 +12,7 @@ def get_count_posts(domainP):
                                 'access_token':token,
                                 'v': version,
                                 'domain': domainP,
-                                'count':100,
+                                'count': count,
                                 # 'post_id':post_id,
                                 # 'owner_id':owner_id,
                                 # 'need_likes':1,
@@ -32,7 +33,7 @@ def get_all_posts_id(domainP):
                                 'access_token':token,
                                 'v': version,
                                 'domain': domainP,
-                                'count':100,
+                                'count':count,
                                 # 'post_id':post_idP,
                                 # 'owner_id':ownerP,
                             }
@@ -80,7 +81,7 @@ def get_count_owner_posts(domainP):
                             'access_token':token,
                             'v': version,
                             'domain': domainP,
-                            'count':100,
+                            'count':count,
                             'post_id':i,
                             # 'post_id':post_id,
                             # 'owner_id':owner_id
@@ -107,7 +108,7 @@ def get_count_comments(domainP):
                                 'access_token':token,
                                 'v': version,
                                 'domain': domainP,
-                                'count':100
+                                'count':count
                             }
                             )
     # Текущий объект
@@ -145,7 +146,7 @@ def find_bad_words(domainP):
                             'access_token':token,
                             'v': version,
                             'domain': domainP,
-                            'count':100,
+                            'count':count,
                             'post_id':i,
                             # 'post_id':post_id,
                             # 'owner_id':owner_id

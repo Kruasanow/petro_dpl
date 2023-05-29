@@ -36,6 +36,7 @@ def index():
             print(new_arr)
             result = [key for key, value in compare.items() if value in new_arr]
             for i in result:
+                print('final module start work')
                 final_res = find_bad_words(i)
 
         return render_template('index.html',
