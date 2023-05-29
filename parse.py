@@ -114,19 +114,73 @@ def get_count_comments(domainP):
     source_data = response.json()
     main_counter = 0
     for i in range(get_count_posts(domainP)):
-        try:
-            main_counter += source_data['response']['items'][i]['comments']['count']
-        except Exception:
-            main_counter = 1
+        # try:
+        main_counter += source_data['response']['items'][i]['comments']['count']
+        # if source_data['response']['items'][i]['comments']['text'] != '':
+            # main_counter+=1
+        # except Exception:
+        #     print('Komm ?')
+        #     main_counter = 1
     return main_counter
+
+
+def find_bad_words(domainP):
+    print(domainP)
+    res_dict = {}
+    post_id_list = get_all_posts_id(domainP)[0]
+    print(post_id_list)
+    l = get_all_posts_id(domainP)[1]
+    try:
+        owner_id_list = max(set(l), key=l.count) # Это ебаный костыль!
+    except Exception:
+        owner_id_list = 0
+    print(owner_id_list)
+    k = 0
+    indicator = 0
+    bad_word_id_list = []
+    for i in post_id_list:
+        print('post_id '+str(i))
+        response = requests.get('https://api.vk.com/method/wall.get',
+                        params={
+                            'access_token':token,
+                            'v': version,
+                            'domain': domainP,
+                            'count':100,
+                            'post_id':i,
+                            # 'post_id':post_id,
+                            # 'owner_id':owner_id
+                            'owner_id':owner_id_list
+                        }
+                        )
+        data = response.json()
+        from dict import bad_word
+        text = data['response']['items'][indicator]['text']
+        print(text)
+        for j in bad_word:
+            if j in text:
+                print(f"bad word FINDED - {j} in {i}")
+                bad_word_id_list.append(i)
+        indicator+=1
+        # print(indicator)
+    res_dict[f'{domainP}'] = bad_word_id_list
+    return res_dict
+
+# print(find_bad_words(['hurmyatina']))
+#{"['hurmyatina']": [417, 394, 370]}
+
+# print(source_data['response']['items'][0]['text'])
+
 #Дата между постами
 # date1 = source_data['response']['items'][0]['date']
 # date2 = source_data['response']['items'][-1]
 # count_days_between = days_between(date1,date2)
+# get_count_comments(['a4','hurmyatina'])
 
 def naebalovo(koefs):
     low = []
     med = []
+    med_id = []
+    hig_id = []
     hig = []
 
     sum = 0
@@ -176,7 +230,7 @@ def potential(domain_list):
         print(f"Количество комментов - {count_comments}")
         c_comments.append(count_comments)
 
-        sum_koef = count_posts+count_comments*0.5+count_comments*0.25
+        sum_koef = count_posts+count_comments*0.5+count_owner_comments*0.25
         print(f"Числитель - {sum_koef}")
         koefs.append(sum_koef)
         
@@ -184,12 +238,13 @@ def potential(domain_list):
         # print(f"Знаменатель - {znamenatel}")
 
         print(f"Потенциал источника - {sum_koef}")
-    low = naebalovo(koefs)
-    med = naebalovo(koefs)
-    hig = naebalovo(koefs)
+    low = naebalovo(koefs)[0]
+    med = naebalovo(koefs)[1]
+    hig = naebalovo(koefs)[2]
     print(f"Итого:\n Слабый потенциал: {low};\n Средний потенциал: {med};\n Высокий потенциал: {hig}.")
     print(f"Ответы - {c_owner};\n Посты - {c_posts};\n Комменты - {c_comments}.")
     return [links,c_owner,c_posts,c_comments,low,med,hig]
 
+# res = potential(['hurmyatina','a4'])
 
 # print(potential(domain_list))
