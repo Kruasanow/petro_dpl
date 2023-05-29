@@ -6,6 +6,8 @@ token = token_buff
 version = 5.131
 count = 30
 
+import requests
+
 def get_count_posts(domainP):
     response = requests.get('https://api.vk.com/method/wall.get',
                             params={
@@ -124,7 +126,6 @@ def get_count_comments(domainP):
         #     main_counter = 1
     return main_counter
 
-
 def find_bad_words(domainP):
     print(domainP)
     res_dict = {}
@@ -165,6 +166,51 @@ def find_bad_words(domainP):
         # print(indicator)
     res_dict[f'{domainP}'] = bad_word_id_list
     return res_dict
+# {'a4': [187863, 11554338, 4588]}
+def get_likes_reposts_views(domainP):
+    
+    # domain = domainP
+    token = token_buff
+    v = version
+    # posts_ids = get_all_posts_id(i)
+    res_list = []
+    sum_likes = 0
+    sum_views = 0
+    sum_reposts = 0
+
+    # for i in domain:
+    posts_ids = get_all_posts_id(domainP)[0]
+    owner_ids = get_all_posts_id(domainP)[1]
+    # Формирование URL запроса к API ВКонтакте
+    for j,k in zip(posts_ids,owner_ids):
+        url = f'https://api.vk.com/method/wall.getById?domain={domainP}&posts={k}_{j}&access_token={token}&v={v}'
+        print(url)
+
+        # Отправка запроса и получение данных
+        response = requests.get(url)
+        data = response.json()
+
+        # Обработка полученных данных
+        if 'response' in data and data['response']:
+            post = data['response'][0]
+
+            likes = post['likes']['count']
+            views = post['views']['count']
+            reposts = post['reposts']['count']
+
+            sum_likes+=likes
+            sum_views+=views
+            sum_reposts+=reposts
+
+            print(f'Лайки: {likes}')
+            print(f'Просмотры: {views}')
+            print(f'Репосты: {reposts}')
+        else:
+            print('Не удалось получить информацию о посте.')
+        res_list = [sum_likes,sum_views,sum_reposts]
+    return res_list
+# print(get_likes_reposts_views('hurmyatina'))
+
 
 # print(find_bad_words(['hurmyatina']))
 #{"['hurmyatina']": [417, 394, 370]}
@@ -176,76 +222,102 @@ def find_bad_words(domainP):
 # date2 = source_data['response']['items'][-1]
 # count_days_between = days_between(date1,date2)
 # get_count_comments(['a4','hurmyatina'])
+# a = {'hurmyatina': [0, 30, 25, 81.064, 448, 11840, 47], 'kisszaya': [1, 4, 23, 16.4601, 1, 1, 1]}
 
-def naebalovo(koefs):
+def naebalovo(gdict):
+    k = gdict.keys()
+    v = gdict.values()
     low = []
     med = []
-    med_id = []
-    hig_id = []
     hig = []
+    res = {}
+    for i, j in zip(k, v):
+        res[f"{i}"] = j[3]
 
-    sum = 0
-    for i in koefs:
-        sum+=i
-    try:
-        avg = sum/len(koefs)
-    except Exception:
-        avg = 0
-    for i in koefs:
-        if i < avg:
-            low.append(i)
-            koefs.remove(i)
-    sum = 0
-    for i in koefs:
-        sum+=i
-    try:
-        avg2 = sum/len(koefs)
-    except Exception:
-        avg2 = 0
-    for i in koefs:
-        if i < avg2:
-            med.append(i)
-            koefs.remove(i)
-        else:
-            hig.append(i) 
-    return [low,med,hig]
+    max_value = max(res.values())
+    sum_values = sum(res.values())
+    avg = sum_values / len(res)
 
+    keys_to_remove = []
+    for i in res:
+        if res[f"{i}"] < avg:
+            keys_to_remove.append(i)
+
+    for key in keys_to_remove:
+        del res[key]
+
+    print(res)
+
+    return [res,gdict]
+# {'hurmyatina': 81.064}
+
+# naebalovo(a)
 # domain_list = ['hurmyatina','a4']
 def potential(domain_list):
-    links = domain_list
+
     c_owner = []
     c_posts = []
     c_comments = []
+    c_likes = []
+    c_reposts = []
+    c_views = []
     koefs = []
+    # glvr = list(get_likes_reposts_views(domain_list).values())
+    main_result = {}
+
     for i in domain_list:
-    
-        count_owner_comments = get_count_owner_posts(i)
-        print(f"Количество ответов от владельца под своим постом - {count_owner_comments}")
-        c_owner.append(count_owner_comments)
+        
+        try:
+            count_likes = get_likes_reposts_views(i)[0]
+            print(f"Количество лайков - {count_likes}")
+        except Exception:
+            count_likes = 1
+        # c_likes.append(count_likes)
 
-        count_posts = get_count_posts(i)
-        print(f"Количество постов - {count_posts}")
-        c_posts.append(count_posts)
-
-        count_comments = get_count_comments(i) 
-        print(f"Количество комментов - {count_comments}")
-        c_comments.append(count_comments)
-
-        sum_koef = count_posts+count_comments*0.5+count_owner_comments*0.25
+        try:
+            count_views = get_likes_reposts_views(i)[1]
+            print(f"Количество просмотров - {count_views}")
+        except Exception:
+            count_views = 1
+        # c_views.append(count_views)
+        try:
+            count_reposts = get_likes_reposts_views(i)[2]
+            print(f"Количество репостов - {count_reposts}")
+        # c_reposts.append(count_reposts)
+        except Exception:
+            count_reposts = 1
+        try:
+            count_owner_comments = get_count_owner_posts(i)
+            print(f"Количество ответов от владельца под своим постом - {count_owner_comments}")
+        # c_owner.append(count_owner_comments)
+        except Exception:
+            count_owner_comments = 1
+        try:
+            count_posts = get_count_posts(i)
+            print(f"Количество постов - {count_posts}")
+        except Exception:
+            count_posts = 1
+        # c_posts.append(count_posts)
+        try:
+            count_comments = get_count_comments(i) 
+            print(f"Количество комментов - {count_comments}")
+        except Exception:
+            count_comments = 1
+        # c_comments.append(count_comments)
+        sum_koef = count_posts+count_comments*0.5+count_owner_comments*0.25+count_likes*0.01+count_reposts*0.7+count_views*0.0001
         print(f"Числитель - {sum_koef}")
-        koefs.append(sum_koef)
+        # koefs.append(sum_koef)
         
         # znamenatel = count_comments+count_owner_comments+count_posts
         # print(f"Знаменатель - {znamenatel}")
 
         print(f"Потенциал источника - {sum_koef}")
-    low = naebalovo(koefs)[0]
-    med = naebalovo(koefs)[1]
-    hig = naebalovo(koefs)[2]
-    print(f"Итого:\n Слабый потенциал: {low};\n Средний потенциал: {med};\n Высокий потенциал: {hig}.")
-    print(f"Ответы - {c_owner};\n Посты - {c_posts};\n Комменты - {c_comments}.")
-    return [links,c_owner,c_posts,c_comments,low,med,hig]
+        main_result[f'{i}'] = [count_owner_comments,count_posts,count_comments,sum_koef,count_likes,count_views,count_reposts]
 
-# res = potential(['hurmyatina','a4'])
+    print(f" Ответы - {c_owner};\n Посты - {c_posts};\n Комменты - {c_comments}; Лайки - {c_likes};\n Просмотров - {c_views};\n Репостов - {c_reposts}.")
+    return main_result
+
+
+# print(potential(['hurmyatina','kisszaya']))
 
 # print(potential(domain_list))

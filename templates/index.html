@@ -14,8 +14,21 @@
         </p>
           </form>
           <h4>{{data}}</h4>
-              {{res}}
-
-          {{final}}
+          <table>
+            <tr>
+              {% for i in c %}
+              <th>
+                {{i}}
+              </th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for j in c2 %}
+              <td>
+                {{j}}
+              </td>
+              {% endfor %}
+            </tr>
+          </table>
 </body>
 </html>

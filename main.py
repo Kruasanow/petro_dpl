@@ -2,7 +2,7 @@ from flask import Flask, render_template, url_for, request, session
 import requests
 from tokens import token_buff
 from read_csv import reload_csv, read_csv_file
-from parse import potential, find_bad_words
+from parse import potential, find_bad_words, naebalovo, get_count_posts
 
 app = Flask(__name__)    
 
@@ -15,34 +15,33 @@ def index():
         filename = file.filename
         print(filename)
         if file:
-            # Пример использования
-            # file_path = file
             csv_data = reload_csv(read_csv_file(filename))
             print(csv_data)
-            res = potential(csv_data)
-            res = potential(csv_data)[3]
-            compare = dict(zip(csv_data,res))
-            a = list(compare.values())
-            sum = 0
-            new_arr = []
-            for i in a:
-               sum+=i
-            avg = sum/len(a)
-            for j in a:
-                if j<avg:
-                    pass
+            danger_domains = list(naebalovo(potential(csv_data))[0].keys())
+            ret_bad_w = {}
+            for i in danger_domains:
+                ret_bad_w[f"badwords-{i}"] = find_bad_words(i)
+                ret_bad_w[f"count-posts-{i}"] = get_count_posts(i)
+                ret_bad_w[f"procent-{i}"] = len(ret_bad_w[f"badwords-{i}"][f"{i}"]) / ret_bad_w[f"count-posts-{i}"]
+
+            for j in danger_domains:
+                if ret_bad_w[f'procent-{j}'] <= 0.05:
+                    ret_bad_w[f'raport-{j}'] = 'запустить чат ботов, которые создадут позитивный шум, создадут альтернативную точку зрения'
+                elif ret_bad_w[f'procent-{j}'] > 0.05 and ret_bad_w[f'procent-{j}'] <= 0.15:
+                    ret_bad_w[f'raport-{j}'] = 'заблокировать посты'  
                 else:
-                    new_arr.append(j)
-            print(new_arr)
-            result = [key for key, value in compare.items() if value in new_arr]
-            for i in result:
-                print('final module start work')
-                final_res = find_bad_words(i)
+                    ret_bad_w[f'raport-{j}'] = 'заблокировать источник'
+        
+            # c2 = [{'a4': [1668298, 1664557, 1661945, 1659315]}, 30, 0.13333333333333333, 'запустить чат ботов, которые создадут позитивный шум, создадут альтернативную точку зрения']
+            # c = ['badwords-a4', 'count-posts-a4', 'procent-a4', 'raport-a4']
+            c= ret_bad_w.keys()
+            c2= ret_bad_w.values()
+
 
         return render_template('index.html',
                                data = csv_data,
-                               res = res,
-                               final = final_res
+                               c = c,
+                               c2 = c2
                                )
 
     return render_template('index.html')
